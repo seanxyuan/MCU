@@ -121,14 +121,19 @@ void loop()
   wetting_output.publish( &wetting_o);
   nh.spinOnce();
   if (eStop == true || wetOn == false){
-    
+    allOff();    
   }
   else{
     if(wetAllOn == true){
-      
+      allOn();
     }
     else if(wetOn == true){
-      
+      breakerOn();
+      doserOn(doser);
+      agitatorOn(agitator);
+      waterOn(water);
+      mixerOn(mixer);
+      reservoirOn(reservoir);
     }
   }
   
