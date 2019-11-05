@@ -18,6 +18,39 @@ RoboClaw roboclaw(&serial,10000);
 #define address2 0x82
 #define address3 0x83
 
+//define arduino pins
+int relay1 = 38; int relay2 = 40; int relay3 = 42; int relay4 = 44;
+int relay5 = 46; int relay6 = 48; int relay7 = 50; int relay8 = 52;
+int sensor1 = 28; int sensor2 = 29; int sensor3 = 30; int sensor4 = 31;
+int sensor5 = 32; int sensor6 = 33; int sensor7 = 34; int sensor8 = 35;
+int servo1 = 24; int servo2 = 25; int servo3 = 26; int servo4 = 27;
+
+//sub master information
+bool eStop = true;
+bool siloOn = false;
+bool siloAllOn = false;
+bool wetOn = false;
+bool wetAllOn = false;
+
+//sub wetting information
+bool breaker = false;
+int breakerPWM = 0;
+bool doser = false;
+int doserSpeed = 0;
+int doserP = 0;
+int doserI = 0;
+int doserD = 0;
+int doserQPPS = 200000;
+bool agitator = false;
+int agitatorPWM = 0;
+bool water = false;
+bool mixer = false;
+bool reservoir = false;
+int reservoirSpeed = 0;
+
+//sub delivery information
+limitSwitch1 = false;
+
 //initialize ROS
 ros::NodeHandle nh;
 ros_essentials_cpp::MASTER master;  //sub
@@ -63,38 +96,80 @@ void messageDELIVERY_O( const ros_essentials_cpp::DELIVERY_O &delivery_o_msg){
 void update_wetting(){
   levelBreaker = digitalRead();
   levelReservoir = digitalRead();
+  digitalWrite(,HIGH);
+  digitalWrite(,HIGH);
+  digitalWrite(,HIGH);
 }
 
 void allOff(){
-  
+  roboclaw.ForwardM1(address0,0);
+  roboclaw.SpeedM1(address,0);
+  roboclaw.ForwardM1(address1,50);
+  digitalWrite(,LOW);
+  digitalWrite(,LOW);
+  digitalWrite(,LOW);
 }
 
 void allOn(){
-  
+  roboclaw.ForwardM1(address0,50);
+  roboclaw.SpeedM1(address,doserSpeed);
+  roboclaw.ForwardM1(address1,50);
 }
 
 void breakerOn(){
-  
+  if (breaker == true){
+    roboclaw.ForwardM1(address0,50);
+  }
+  else{
+    roboclaw.ForwardM1(address0,0);
+  }
 }
 
 void doserOn(){
+  if (doser == true){
+    roboclaw.SpeedM1(address,doserSpeed);
+  }
+  else{
+    roboclaw.SpeedM1(address,0);
+  }
   
 }
 
 void agitatorOn(){
-  
+  if(agitator == true){
+    roboclaw.ForwardM1(address1,50);
+  }
+  else{
+    roboclaw.ForwardM1(address1,50);
+  }
 }
 
 void waterOn(){
-  
+  if(water == true){
+    digitalWrite(,HIGH);
+  }
+  else{
+    digitalWrite(,LOW);
+  }
 }
 
 void mixerOn(){
+  if(mixer == true){
+    digitalWrite(,HIGH);
+  }
+  else{
+    digitalWrite(,LOW);
+  }
   
 }
 
 void reservoirOn(){
-  
+  if (reservoir == true){
+    digitalWrite(,HIGH);
+  }
+  else{
+    digitalWrite(,LOW);
+  }
 }
 
 //initialize subscriber
@@ -112,7 +187,7 @@ void setup()
   nh.initNode();
   nh.advertise(wetting_output);
   roboclaw.begin(38400);
-
+  roboclaw.SetM1VelocityPID(address,doserD,doserP,doserI,doserQPPS);
 }
 
 void loop()
@@ -129,11 +204,11 @@ void loop()
     }
     else if(wetOn == true){
       breakerOn();
-      doserOn(doser);
-      agitatorOn(agitator);
-      waterOn(water);
-      mixerOn(mixer);
-      reservoirOn(reservoir);
+      doserOn();
+      agitatorOn();
+      waterOn();
+      mixerOn();
+      reservoirOn();
     }
   }
   
