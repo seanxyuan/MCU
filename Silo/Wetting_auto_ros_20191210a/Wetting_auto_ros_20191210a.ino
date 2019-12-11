@@ -130,18 +130,19 @@ void update_silo(){
 //publish wetting module status
 void update_wetting(){
   wetting_o.levelBreaker = digitalRead(sensor1);
-  //wetting_o.breakerCurrent
-  //wetting_o.doserRSpeed
-  //wetting_o.doserCurrent
-  //wetting_o.agitatorCurrent
-  //wetting_o.waterRSpeed
-  //wetting_o.mixerRSpeed
+  wetting_o.breakerCurrent = random(300);
+  wetting_o.doserRSpeed = random(300);
+  wetting_o.doserCurrent = random(300);
+  wetting_o.agitatorCurrent = random(300);
+  wetting_o.waterRSpeed = random(300);
+  wetting_o.mixerRSpeed = random(300);
   wetting_o.levelReservoir = digitalRead(sensor4);
 }
 
-
+//start the breaker if doser, water, mixer and reservoir are ON and reservoir is not FULL
 void breakerOn(){
-  if (breaker == true && doser == true){
+  if (breaker == true doser == true && water == true && 
+  mixer == true && reservoir == true && digitalRead(sensor4) == false){
     roboclaw.ForwardM2(address0,50);
   }
   else{
@@ -149,8 +150,10 @@ void breakerOn(){
   }
 }
 
+//start the doser if water, mixer and reservoir are ON and reservoir is not FULL 
 void doserOn(){
-  if (doser == true && mixer == true){
+  if (doser == true && water == true && mixer == true && 
+  reservoir == true && digitalRead(sensor4) == false){
     roboclaw.SpeedM1(address1,doserSpeed);
   }
   else{
@@ -159,6 +162,7 @@ void doserOn(){
   
 }
 
+//start the agitator if mixer is ON 
 void agitatorOn(){
   if(agitator == true && mixer == true){
     roboclaw.ForwardM1(address0,50);
@@ -168,8 +172,12 @@ void agitatorOn(){
   }
 }
 
+//start the water if mixer and reservoir are ON and reservoir is not FULL 
 void waterOn(){
-  if(water == true && mixer == true){
+  if (wetAllOn == true && digitalRead(sensor4) == false){
+    
+  }
+  else if(water == true && mixer == true && reservoir == true && digitalRead(sensor4) == false){
     digitalWrite(relay3, HIGH);
   }
   else{
@@ -177,8 +185,12 @@ void waterOn(){
   }
 }
 
+//start the mixer
 void mixerOn(){
-  if(mixer == true){
+  if (wetAllOn == true && digitalRead(sensor4) == false){
+    digitalWrite(relay2, HIGH);
+  }
+  else if (wetOn == true && mixer == true){
     digitalWrite(relay2, HIGH);
   }
   else{
@@ -187,8 +199,12 @@ void mixerOn(){
   
 }
 
+//start the reservoir if reservoir is not FULL 
 void reservoirOn(){
-  if (reservoir == true){
+  if (wetAllOn == true && digitalRead(sensor4) == false){
+    //Turn on reservoir
+  }
+  else if (wetOn == true && reservoir == true && digitalRead(sensor4) == false){
     //Turn on reservoir
   }
   else{
@@ -209,20 +225,12 @@ void allOff(){
   digitalWrite(relay8, LOW);
 }
 
-void allOn(){
-  roboclaw.ForwardM1(address0,50);
-  roboclaw.ForwardM2(address0,50);
-  roboclaw.SpeedM1(address1,doserSpeed);
-  //turn on reservoir motor
-  digitalWrite(relay1, HIGH);
-  digitalWrite(relay3, HIGH);
-  digitalWrite(relay8, HIGH);
-}
 
 //initialize subscriber
 ros::Subscriber<ros_essentials_cpp::MASTER> master_input("Master_Topic", &messageMASTER);
 ros::Subscriber<ros_essentials_cpp::WETTING_I> wetting_input("Wetting_Input_Topic", &messageWETTING_I);
-ros::Subscriber<ros_essentials_cpp::DELIVERY_O> delivery_output("Delivery_Output_Topic", &messageDELIVERY_O);
+ros::Subscriber<ros_essentials_cpp::SILO_I> silo_input("Silo_Input_Topic", &messageSILO_I);
+//ros::Subscriber<ros_essentials_cpp::DELIVERY_O> delivery_output("Delivery_Output_Topic", &messageDELIVERY_O);
 
 //system setup
 void setup()
@@ -230,8 +238,13 @@ void setup()
   pinMode(relay1,OUTPUT);
   pinMode(relay2,OUTPUT);
   pinMode(relay3,OUTPUT);
+  pinMode(relay4,OUTPUT);
+  pinMode(relay5,OUTPUT);
   pinMode(relay8,OUTPUT);
   pinMode(sensor1,INPUT);
+  pinMode(sensor2,INPUT);
+  pinMode(sensor3,INPUT);
+  pinMode(sensor4,INPUT);
   nh.subscribe(master_input);
   nh.subscribe(wetting_input);
   nh.subscribe(silo_input);
@@ -251,10 +264,7 @@ void loop()
   if (eStop == true||(wetOn == false && wetAllOn == false)){
     allOff();    
   }
-  else if(wetOn == true){
-    allOn();
-  }
-  else if(wetOn == true && wetAllOn == false){
+  else if(wetAllOn == true || wetOn == true){
     breakerOn();
     doserOn();
     agitatorOn();
