@@ -39,19 +39,20 @@ bool levelReservoir;
 void updateSensor(){
   levelBreaker = digitalRead(sensor1);
   levelReservoir = digitalRead(sensor4);
+  digitalWrite(relay8, LOW);
 }
 
 //start the breaker if doser, water, mixer and reservoir are ON and reservoir is not FULL
 void breakerOn(){
   if (wetAllOn == true && breaker == true && doser == true && 
   agitator == true && mixer == true && levelReservoir == false){
-    roboclaw.ForwardM2(address0,50);
+    roboclaw.BackwardM1(address0,100);
   }
   else if(wetOn == true && breaker == true){
-    roboclaw.ForwardM2(address0,50);
+    roboclaw.BackwardM1(address0,100);
   }
   else{
-    roboclaw.ForwardM2(address0,0);
+    roboclaw.BackwardM1(address0,0);
   }
 }
 
@@ -59,10 +60,10 @@ void breakerOn(){
 void doserOn(){
   if (wetAllOn == true && doser == true && water == true &&
   mixer == true && levelReservoir == false){
-    roboclaw.SpeedM1(address1,10000);
+    roboclaw.SpeedM1(address1,-100000);
   }
   else if (wetOn == true && doser == true){
-    roboclaw.SpeedM1(address1,10000);
+    roboclaw.SpeedM1(address1,-100000);
   }
   else{
     roboclaw.SpeedM1(address1,0);
@@ -73,39 +74,39 @@ void doserOn(){
 //start the agitator if mixer is ON 
 void agitatorOn(){
   if(wetAllOn == true && agitator == true){
-    roboclaw.ForwardM1(address0,50);
+    roboclaw.ForwardM2(address0,100);
   }
   else if (wetOn == true && agitator == true){
-    roboclaw.ForwardM1(address0,50);
+    roboclaw.ForwardM2(address0,100);
   }
   else{
-    roboclaw.ForwardM1(address0,0);
+    roboclaw.ForwardM2(address0,0);
   }
 }
 
 //start the water if mixer and reservoir are ON and reservoir is not FULL 
 void waterOn(){
   if (wetAllOn == true && water == true && agitator == true && mixer == true && levelReservoir == false){
-    digitalWrite(relay3, HIGH);
+    digitalWrite(relay3, LOW);
   }
   else if (wetOn == true && water == true){
-    digitalWrite(relay3, HIGH);
+    digitalWrite(relay3, LOW);
   }
   else{
-    digitalWrite(relay3, LOW);
+    digitalWrite(relay3, HIGH);
   }
 }
 
 //start the mixer
 void mixerOn(){
   if (wetAllOn == true && mixer == true && levelReservoir == false){
-    digitalWrite(relay2, HIGH);
+    digitalWrite(relay2, LOW);
   }
   else if (wetOn == true && mixer == true){
-    digitalWrite(relay2, HIGH);
+    digitalWrite(relay2, LOW);
   }
   else{
-    digitalWrite(relay2, LOW);
+    digitalWrite(relay2, HIGH);
   }
   
 }
@@ -113,13 +114,13 @@ void mixerOn(){
 //start the reservoir if reservoir is not FULL 
 void reservoirOn(){
   if (wetAllOn == true && reservoir == true){
-    //Turn on reservoir
+    digitalWrite(relay6, LOW);
   }
   else if (wetOn == true && reservoir == true){
-    //Turn on reservoir
+    digitalWrite(relay6, LOW);
   }
   else{
-    //Turn off reservoir
+    digitalWrite(relay6, HIGH);
   }
 }
 
@@ -141,44 +142,27 @@ void allOn(){
   reservoir = true;
 }
 
-void sysPrint(){
-  //Serial.print(" levelBreaker: ");
-  //Serial.print(levelBreaker);
-  //Serial.print(" levelReservoir: ");
-  //Serial.println(levelReservoir);  
-  Serial.print(" eStop: ");
-  Serial.print(eStop);
-  Serial.print(" wetOn: ");
-  Serial.print(wetOn); 
-  Serial.print(" wetAllOn: ");
-  Serial.print(wetAllOn);
-  Serial.print(" breaker: ");
-  Serial.print(breaker); 
-  Serial.print(" doser: ");
-  Serial.print(doser);
-  Serial.print(" agitator: ");
-  Serial.print(agitator); 
-  Serial.print(" water: ");
-  Serial.print(water); 
-  Serial.print(" mixer: ");
-  Serial.print(mixer);
-  Serial.print(" reservoir: ");
-  Serial.println(reservoir); 
+void sysPrint(){ 
+  Serial.print(" eStop:");Serial.print(eStop);
+  Serial.print(" wetOn:");Serial.print(wetOn); 
+  Serial.print(" wetAllOn:");Serial.print(wetAllOn);
+  Serial.print(" breaker:");Serial.print(breaker); 
+  Serial.print(" doser:");Serial.print(doser);
+  Serial.print(" agitator:");Serial.print(agitator); 
+  Serial.print(" water:");Serial.print(water); 
+  Serial.print(" mixer:");Serial.print(mixer);
+  Serial.print(" reservoir:");Serial.print(reservoir); 
+  Serial.print(" levelBreaker:");Serial.print(levelBreaker);
+  Serial.print(" levelReservoir:");Serial.println(levelReservoir);
 }
 
 //system setup
 void setup()
 {
-  pinMode(relay1,OUTPUT);
-  pinMode(relay2,OUTPUT);
-  pinMode(relay3,OUTPUT);
-  pinMode(relay4,OUTPUT);
-  pinMode(relay5,OUTPUT);
-  pinMode(relay8,OUTPUT);
-  pinMode(sensor1,INPUT);
-  pinMode(sensor2,INPUT);
-  pinMode(sensor3,INPUT);
-  pinMode(sensor4,INPUT);
+  pinMode(relay1,OUTPUT);pinMode(relay2,OUTPUT);pinMode(relay3,OUTPUT);pinMode(relay4,OUTPUT);
+  pinMode(relay5,OUTPUT);pinMode(relay6,OUTPUT);pinMode(relay7,OUTPUT);pinMode(relay8,OUTPUT);
+  pinMode(sensor1,INPUT);pinMode(sensor2,INPUT);pinMode(sensor3,INPUT);pinMode(sensor4,INPUT);
+  pinMode(sensor5,INPUT);pinMode(sensor6,INPUT);pinMode(sensor7,INPUT);pinMode(sensor8,INPUT);
   roboclaw.begin(38400);
   roboclaw.SetM1VelocityPID(address1, 0.1, 10, 1, 200000);
   Serial.begin(9600);
